@@ -1,0 +1,15 @@
+{
+	"/": [
+		"src/routes/+layout.ts",
+		"src/routes/+layout.ts"
+	],
+	"/llama2": [
+		"src/routes/+layout.ts"
+	],
+	"/redact": [
+		"src/routes/+layout.ts"
+	],
+	"/yolo": [
+		"src/routes/+layout.ts"
+	]
+}
