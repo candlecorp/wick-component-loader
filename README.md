@@ -1,4 +1,4 @@
-# wasm.candle.dev UI
+# Wick component loader
 
 This project is a single-page sveltekit application, powered by [`create-svelte`](https://github.com/sveltejs/kit/tree/master/packages/create-svelte).
 
