@@ -1,31 +1,29 @@
 <script lang="ts">
 	import { decode, encode } from '@msgpack/msgpack';
-	import { Button, Dropzone, Input, Label, Select, Textarea } from 'flowbite-svelte';
+	import { Button, Dropzone, Input, Label, Select } from 'flowbite-svelte';
 	import { Observable, from } from 'rxjs';
 	import { Packet, WasmRsComponent, type OperationDefinition } from '@candlecorp/wick';
 	import { instantiateComponentWorkerFromBytes } from '$lib/workers';
 	import { onDestroy } from 'svelte';
 	import Section from '../components/Section.svelte';
-	import { header } from '../styles';
 	import Output from '../components/Output.svelte';
 	import { writable, type Writable } from 'svelte/store';
 
+	// Variables used in the UI
 	let operation: undefined | OperationDefinition;
-	let operations: OperationDefinition[] = [];
-
 	let invocationResult: Writable<string[]> = writable([]);
-
 	let component: WasmRsComponent | undefined;
 
+	// Compile a WebAssembly component from the passed buffer.
 	async function loadComponent(buffer: Uint8Array): Promise<void> {
 		if (!component) {
 			component = await instantiateComponentWorkerFromBytes(buffer);
 		}
-
-		operations = component.signature.operations;
-		operation = operations[0];
+		// Default the selected operation to the first op in the component.
+		operation = component.signature.operations[0];
 	}
 
+	// This method is a UI-specific utility to grab a configuration object from Input elements.
 	function createOperationConfig(operation: OperationDefinition): Record<string, any> {
 		const config = {} as any;
 
@@ -36,16 +34,24 @@
 		return config;
 	}
 
+	// This method is another UI-specific utility that creates an invocation stream from Input elements.
 	function createInputStream(operation: OperationDefinition): Observable<Packet> {
 		const inputs = [];
 
 		for (const field of operation.inputs) {
 			const input = document.getElementById(`input_${field.name}`) as HTMLInputElement;
 			let value = field.type === 'string' ? input.value : JSON.parse(input.value);
+
+			// The "Packet" wraps a value destined for a component. It encodes data,
+			// links it to a name (i.e. an input/parameter name), and includes any necessary flags.
 			inputs.push(new Packet(field.name, encode(value)));
+
+			// Since one stream contains all inputs, we need to signal the end of each individual input
+			// stream with `Packet.Done(input name)`
 			inputs.push(Packet.Done(field.name));
 		}
 
+		// rxjs's `from()` function turns our array into an Observable.
 		return from(inputs);
 	}
 
@@ -153,8 +159,7 @@
 	const blockHeader = 'text-center';
 </script>
 
-<h1 class={header}>Wick Component Loader</h1>
-<Section header="WasmRS File">
+<Section header="Wick Component Loader">
 	{#if !component}
 		<Dropzone
 			on:drop={onDrop}
@@ -182,7 +187,7 @@
 				<p class="mb-2 text-sm text-gray-500 dark:text-gray-400">
 					<span class="font-semibold">Click to upload</span> or drag and drop
 				</p>
-				<p class="text-xs text-gray-500 dark:text-gray-400">a Wick component .wasm file</p>
+				<p class="text-xs text-gray-500 dark:text-gray-400">a Wick .wasm file</p>
 			</div>
 		</Dropzone>
 	{:else}
@@ -194,7 +199,7 @@
 				<Select
 					id="operation"
 					class=""
-					items={operations.map((ex) => ({
+					items={component.signature.operations.map((ex) => ({
 						value: ex,
 						name: ex.name
 					}))}

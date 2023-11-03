@@ -14,8 +14,8 @@ const wasiOpts: wasi.WasiOptions = {
 	env: {},
 	preopens: {},
 	stdin: 0,
-	stdout: 1,
-	stderr: 2
+	stdout: 1, // console in browser
+	stderr: 2 // console in browser
 };
 
 export async function instantiateComponentWorkerFromBytes(
@@ -23,6 +23,12 @@ export async function instantiateComponentWorkerFromBytes(
 ): Promise<WasmRsComponent> {
 	try {
 		let workerUrl: URL;
+		/*
+     importing `dev` from `$app/environment` is a svelte-specific way to get
+     the correct worker URL for the environment.
+
+     This may or may not be relevant in your UI framework of choice.
+    */
 		if (dev) {
 			workerUrl = new URL('$lib/component-worker.js', import.meta.url);
 		} else {
